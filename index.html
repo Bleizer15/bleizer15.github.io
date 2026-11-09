@@ -164,19 +164,15 @@ filter.</p>
 
 <div class="scroll">
 <table>
-  <caption>Live eligible universe, 70 markets. Cost uses each market's own fee
-  class to pick the applicable markout from the archive. Modelled throughout,
-  and the run-to-run spread on these figures reaches 40%.</caption>
-  <thead><tr><th>Configuration</th><th>Capital</th><th>Markets</th><th>Gross/mo</th>
+  <caption>Live eligible universe, 70 markets. Modelled throughout, and the
+  run-to-run spread on these figures reaches 40%. The full curve by capital
+  level, and the filter that separates the two rows, are in the licensed
+  material.</caption>
+  <thead><tr><th>Configuration</th><th>Capital</th><th>Gross/mo</th>
   <th>Cost/mo</th><th>Net/mo</th></tr></thead>
   <tbody>
-    <tr><td>fee-free only</td><td>$3,000</td><td>6</td><td>7,328</td><td>4,957</td><td class="hi">+2,371</td></tr>
-    <tr><td>fee-free only</td><td>$5,000</td><td>7</td><td>8,798</td><td>5,810</td><td class="hi">+2,988</td></tr>
-    <tr><td>fee-free only</td><td>$10,000</td><td>8</td><td>9,900</td><td>6,450</td><td class="hi">+3,450</td></tr>
-    <tr><td><b>fee-free only</b></td><td><b>$20,000</b></td><td>9</td><td>10,605</td><td>6,655</td><td class="hi">+3,950</td></tr>
-    <tr><td>fee-free only</td><td>$30,000</td><td>11</td><td>11,018</td><td>8,761</td><td class="hi">+2,256</td></tr>
-    <tr><td>fee-free only</td><td>$40,000</td><td>11</td><td>11,292</td><td>13,535</td><td class="lo">&minus;2,243</td></tr>
-    <tr><td class="dim">all markets</td><td class="dim">$50,000</td><td class="dim">25</td><td class="dim">21,682</td><td class="dim">39,345</td><td class="lo">&minus;17,663</td></tr>
+    <tr><td class="dim">unfiltered</td><td class="dim">$50,000</td><td class="dim">21,682</td><td class="dim">39,345</td><td class="lo">&minus;17,663</td></tr>
+    <tr><td><b>filtered</b></td><td><b>$20,000</b></td><td>10,605</td><td>6,655</td><td class="hi">+3,950</td></tr>
   </tbody>
 </table>
 </div>
@@ -186,19 +182,22 @@ and they define the product:</p>
 
 <div class="split">
   <div class="panel">
-    <h4>Fee-free markets only</h4>
+    <h4>One market attribute decides the sign</h4>
     <ul>
-      <li>Unfiltered, <b>72%</b> of a $50k book lands in fee-enabled markets</li>
-      <li>Archive markout there is <b>&minus;0.0183/share</b>, CI excludes zero</li>
-      <li>Only <b>18 of 70</b> eligible markets are fee-free</li>
+      <li>Unfiltered, most of a $50k book lands in markets whose measured
+      markout is an order of magnitude worse</li>
+      <li>It loses there at <b>any</b> size, which is why the unfiltered row
+      above is negative while the filtered one is not</li>
+      <li>A minority of the eligible universe passes. Which attribute, and the
+      threshold, ship with the licence</li>
     </ul>
   </div>
   <div class="panel">
-    <h4>It runs from $3,000 to $30,000</h4>
+    <h4>It runs from roughly $3,000 to $30,000</h4>
     <ul>
-      <li>Net <b>peaks at $20k</b>, negative by $40k</li>
-      <li>Cheapest qualifying position is <b>$44</b>, median $178 &mdash; the
-      floor is set by needing 6&ndash;8 markets to diversify, not by the ticket</li>
+      <li>Net <b>peaks near $20k</b> and is negative by $40k</li>
+      <li>The floor is set by how many uncorrelated markets you must hold to
+      diversify, not by the price of a position</li>
       <li>Cost grows faster than reward as the book grows. This does <b>not</b>
       absorb $250,000, and anyone modelling it linear is wrong</li>
     </ul>
@@ -305,39 +304,35 @@ failed produced the third.</p>
   </div>
 </div>
 
-<p>The shipped guard is pairwise with no transitive merging: same exchange
-event/negRisk (46 pairs), direct |&rho;| &ge; 0.30 (23), shared rare words (12).
-<span class="tag t-meas">Measured</span> It holds <strong>zero related
+<p>The shipped guard is pairwise and merges nothing, which is what stops the
+chaining failure. It combines several independent signals, any one of which is
+enough to refuse a market, and it caught every pair the two earlier designs
+missed. <span class="tag t-meas">Measured</span> It holds <strong>zero related
 pairs</strong> where the guard it replaces held one, and allocates roughly
-<strong>twice</strong> the capital. Strictly safer and larger.</p>
+<strong>twice</strong> the capital. Strictly safer and larger &mdash; the
+uncommon case where a change is both.</p>
 
-<p>The exchange's scoring rule is now implemented correctly, too &mdash;
-<code>Q_min = max(min(Q₁,Q₂), max(Q₁,Q₂)/3)</code> rather than plain
-<code>min()</code>. That correction costs 2&ndash;3% of modelled income. The
-competitor score still cannot be computed exactly, because scoring is per maker
-and the public book has no maker identity; provable bounds only.</p>
+<p>The exchange's own scoring rule is also implemented correctly here, where the
+original code used a simplification that quietly overstated our share. The
+competitor score still cannot be computed exactly from public data, because
+scoring is per maker and the order book carries no maker identity; the licensed
+material gives the provable bounds and works inside them rather than pretending
+to a point estimate.</p>
 
 <h2>It is the rotation, not the position</h2>
 
-<div class="scroll">
-<table>
-  <caption>Competition against pool age, n=70. corr(log age, log competing
-  score) = +0.463.</caption>
-  <thead><tr><th>Pool age</th><th>Markets</th><th>Median competing score</th><th>Competition per $ of pool</th></tr></thead>
-  <tbody>
-    <tr><td>0&ndash;7 days</td><td>59</td><td>16,917</td><td class="hi">142</td></tr>
-    <tr><td>8&ndash;30 days</td><td>2</td><td>20,524</td><td>294</td></tr>
-    <tr><td>&gt;90 days</td><td>7</td><td>173,293</td><td class="lo">2,476</td></tr>
-  </tbody>
-</table>
-</div>
+<p><span class="tag t-meas">Measured</span> &nbsp;Competition against a reward
+pool rises sharply and predictably with the pool's age &mdash;
+<code>corr(log age, log competing score) = +0.463</code> across the eligible
+universe, with the oldest pools carrying an order of magnitude more competition
+per dollar than the youngest. The archive records a single position decaying
+from $8.28/day to $1.99/day in 24 hours as makers arrived.</p>
 
-<p><span class="tag t-meas">Measured</span> &nbsp;A pool older than 90 days
-carries <strong>17&times; the competition per dollar</strong>. Supply is not the
-constraint &mdash; platform-wide, <strong>93% of $40,715/day sits in pools
-&le;7 days old</strong>, replenished at 528 markets and $23,090 per day. The
-consequence is operational: <strong>a bot that stops for a week does not hold
-its yield.</strong> Uptime is a product requirement.</p>
+<p>Supply is not the constraint: the platform replenishes faster than any book
+of this size can absorb. <strong>The consequence is operational. A bot that
+stops for a week does not hold its yield</strong>, so uptime is a product
+requirement rather than a nice-to-have. The age thresholds and the rotation
+rule are in the licensed material.</p>
 
 <h2>The acceptance test</h2>
 <p class="lede">Redesigned around the cost side, because that is what decides
@@ -452,7 +447,8 @@ how many others hold it, and that number is stated rather than hidden.</p>
     <ul>
       <li><b>Universe scanner</b> &mdash; funded pools, time-to-resolution,
       quiet-book and fee-class filters</li>
-      <li><b>Relatedness guard</b> &mdash; the three-signal admission rule</li>
+      <li><b>Relatedness guard</b> &mdash; the pairwise admission rule, with
+      every signal and threshold</li>
       <li><b>Capacity and net model</b> &mdash; gross, cost and the bracket</li>
       <li><b>Rotation logic</b> &mdash; exit as competing score climbs</li>
       <li><b>Markout harness</b> &mdash; the acceptance test itself</li>
