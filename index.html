@@ -138,7 +138,7 @@ footer p{max-width:70ch;margin:10px 0}
   <div class="kicker">Strategy licence &middot; measured 9 November 2026</div>
   <h1>Polymarket Reward Farm</h1>
   <p class="standfirst">A liquidity-reward harvester for Polymarket's open
-  rewards programme. Selects quiet, uncorrelated, fee-free markets with funded
+  rewards programme. Selects quiet, uncorrelated, eligible markets with funded
   pools, sizes against the 25% score cap, and rotates as competition arrives.</p>
   <p style="margin-top:22px"><span class="tag t-meas">Teal &mdash; measured on live data</span>
   <span class="tag t-mod" style="margin-left:8px">Rust &mdash; modelled or bracketed</span></p>
@@ -218,7 +218,8 @@ an artefact.</p>
 
 <div class="scroll">
 <table>
-  <caption>Net income at $20,000, fee-free, across the measured markout range.
+  <caption>Net income at $20,000 in the shipped configuration, across the measured
+  markout range.
   Break-even sits near &minus;0.0028/share.</caption>
   <thead><tr><th>Markout/share</th><th>Source</th><th>Net/month</th></tr></thead>
   <tbody>
@@ -226,7 +227,7 @@ an artefact.</p>
     <tr><td>0.0011</td><td style="text-align:left">§16b point estimate, n=59</td><td class="hi">+6,490</td></tr>
     <tr><td>0.0026</td><td style="text-align:left">midway to CI floor</td><td>+878</td></tr>
     <tr><td>0.0049</td><td style="text-align:left">§16b CI pessimistic edge</td><td class="lo">&minus;7,727</td></tr>
-    <tr><td>0.0183</td><td style="text-align:left">§16c rebate-eligible, n=173</td><td class="lo">&minus;57,860</td></tr>
+    <tr><td>0.0183</td><td style="text-align:left">&sect;16c, the book it excludes, n=173</td><td class="lo">&minus;57,860</td></tr>
   </tbody>
 </table>
 </div>
@@ -339,8 +340,8 @@ rule are in the licensed material.</p>
 the sign.</p>
 
 <ol class="steps">
-  <li><b>Week 1 &mdash; count fills</b><span>Buyer runs the selector fee-free at
-  ~$20,000. Fill count alone separates the two cost regimes: ~1,048/day versus
+  <li><b>Week 1 &mdash; count fills</b><span>Buyer runs the selector in the shipped configuration
+  at ~$20,000. Fill count alone separates the two cost regimes: ~1,048/day versus
   ~2.2/day. No ambiguity.</span></li>
   <li><b>Weeks 1&ndash;2 &mdash; measure markout</b><span>30-second markout on
   every fill, against the break-even of &minus;0.0028/share. The harness ships
@@ -349,8 +350,8 @@ the sign.</p>
   gives the exchange's own reported share per market. Median absolute error
   versus predicted share &le; 25% over &ge; 10 market-days.</span></li>
   <li><b>Settle</b><span>Month one is refunded if measured net over 30 days is
-  below zero &mdash; provided the shipped configuration was run: fee-free
-  filter on, capital between $5k and $30k, uptime above 90%. The test runs
+  below zero &mdash; provided the shipped configuration was run:
+  the supplied filter enabled, capital inside the stated band, uptime above 90%. The test runs
   alongside live operation, not instead of it: capital is deployed and earning
   from day one.</span></li>
 </ol>
@@ -418,12 +419,12 @@ theirs. The licence states the specific jurisdiction in writing.</p>
 <p><strong>Capped at five operators, and the cap is the point.</strong> Reward
 share is <code>your_Q / (comp_Q + your_Q)</code>, so every additional operator
 raises everyone else's denominator. Modelled net per operator at $20,000 each,
-all running the same fee-free filter:</p>
+all running the shipped filter:</p>
 
 <div class="scroll">
 <table>
-  <caption>The fee-free bench is $2,302/day. A quarter of it is $17,250/month,
-  which is the ceiling for all operators combined &mdash; reached at five.</caption>
+  <caption>A quarter of the eligible bench is the ceiling for all operators combined,
+  and five reaches it.</caption>
   <thead><tr><th>Operators</th><th>Net per operator</th><th>Net, all combined</th></tr></thead>
   <tbody>
     <tr><td>1</td><td class="hi">$5,608</td><td>$5,608</td></tr>
@@ -446,7 +447,7 @@ how many others hold it, and that number is stated rather than hidden.</p>
     <h4>The strategy</h4>
     <ul>
       <li><b>Universe scanner</b> &mdash; funded pools, time-to-resolution,
-      quiet-book and fee-class filters</li>
+      quiet-book and market-class filters</li>
       <li><b>Relatedness guard</b> &mdash; the pairwise admission rule, with
       every signal and threshold</li>
       <li><b>Capacity and net model</b> &mdash; gross, cost and the bracket</li>
