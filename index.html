@@ -1,0 +1,493 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="A liquidity-reward harvester for Polymarket's open rewards programme. Measured capacity, what is proven versus modelled, and licence terms.">
+<meta property="og:title" content="Polymarket Reward Farm">
+<meta property="og:description" content="Gross reward is not income. What the strategy nets after adverse selection, measured.">
+<meta property="og:type" content="website">
+<style>
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+body{margin:0;font:14px system-ui,-apple-system,sans-serif}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style>
+<title>Polymarket Reward Farm</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&family=Public+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+/* Layout: a sell-side research note. One column at reading measure, data tables
+   breaking out full width. Two semantic colours carry the page's whole argument:
+   teal = measured on live data, rust = modelled, bracketed or unresolved. */
+:root{
+  --bg:#F5F7F8; --surface:#FFFFFF; --ink:#16202A; --muted:#5B6B7A;
+  --line:#DBE2E8; --rule:#B9C4CE;
+  --meas:#0F6E6E; --meas-bg:#E3F0EF;
+  --mod:#A4441E;  --mod-bg:#F8EAE3;
+  --display:"Newsreader",Georgia,"Times New Roman",serif;
+  --body:"Public Sans",system-ui,-apple-system,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0F141A; --surface:#161E25; --ink:#E7EEF4; --muted:#8FA0AE;
+  --line:#243039; --rule:#36454F;
+  --meas:#55BDB4; --meas-bg:#12302F;
+  --mod:#E3906A;  --mod-bg:#35211A;
+  color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#0F141A; --surface:#161E25; --ink:#E7EEF4; --muted:#8FA0AE;
+  --line:#243039; --rule:#36454F;
+  --meas:#55BDB4; --meas-bg:#12302F;
+  --mod:#E3906A;  --mod-bg:#35211A;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);
+     font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased}
+.wrap{max-width:780px;margin:0 auto;
+      padding-left:max(16px,env(safe-area-inset-left,0px));
+      padding-right:max(16px,env(safe-area-inset-right,0px));
+      padding-block:0 72px}
+header{padding-block:56px 36px;border-bottom:2px solid var(--rule)}
+.kicker{font-family:var(--mono);font-size:12px;letter-spacing:.14em;
+        text-transform:uppercase;color:var(--muted)}
+h1{font-family:var(--display);font-size:clamp(34px,6vw,50px);line-height:1.08;
+   font-weight:600;margin:14px 0 0;text-wrap:balance;letter-spacing:-.015em}
+.standfirst{font-family:var(--display);font-size:clamp(18px,2.6vw,21px);
+            line-height:1.5;color:var(--muted);margin-top:16px;max-width:60ch}
+h2{font-family:var(--display);font-size:27px;font-weight:600;line-height:1.2;
+   margin:52px 0 6px;text-wrap:balance;letter-spacing:-.01em}
+p{margin:14px 0;max-width:66ch}
+.lede{color:var(--muted);margin-top:4px}
+a{color:var(--meas)}
+strong{font-weight:600}
+code,.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+code{font-size:.9em;background:var(--meas-bg);color:var(--meas);
+     padding:1px 5px;border-radius:3px}
+.tag{display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);
+     font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;
+     padding:4px 9px;border-radius:2px;white-space:nowrap}
+.tag::before{content:"";width:7px;height:7px;border-radius:50%;flex:none}
+.t-meas{background:var(--meas-bg);color:var(--meas)}
+.t-meas::before{background:var(--meas)}
+.t-mod{background:var(--mod-bg);color:var(--mod)}
+.t-mod::before{background:var(--mod)}
+.scroll{overflow-x:auto;margin:22px 0;border:1px solid var(--line);
+        border-radius:4px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-family:var(--mono);
+      font-size:13.5px;font-variant-numeric:tabular-nums;min-width:560px}
+thead th{text-align:right;padding:11px 14px;font-weight:600;font-size:11px;
+         letter-spacing:.08em;text-transform:uppercase;color:var(--muted);
+         border-bottom:1px solid var(--rule);white-space:nowrap}
+thead th:first-child{text-align:left}
+td{text-align:right;padding:9px 14px;border-bottom:1px solid var(--line)}
+td:first-child{text-align:left}
+tbody tr:last-child td{border-bottom:none}
+.hi{color:var(--meas);font-weight:600}
+.lo{color:var(--mod);font-weight:600}
+.dim{color:var(--muted)}
+caption{caption-side:bottom;text-align:left;padding:10px 14px;font-size:12.5px;
+        color:var(--muted);font-family:var(--body);border-top:1px solid var(--line)}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:24px 0}
+@media(max-width:620px){.split{grid-template-columns:1fr}}
+.panel{border:1px solid var(--line);border-radius:4px;padding:20px;
+       background:var(--surface);min-width:0}
+.panel h4{margin:12px 0 8px;font-size:17px;font-family:var(--display);
+          font-weight:600}
+.panel ul{margin:0;padding-left:18px}
+.panel li{margin:7px 0;font-size:14.5px;color:var(--muted)}
+.panel li b{color:var(--ink);font-weight:500}
+.callout{border-left:3px solid var(--mod);background:var(--mod-bg);
+         padding:16px 20px;margin:26px 0;border-radius:0 4px 4px 0}
+.callout p{margin:0;max-width:none;font-size:15px}
+.callout p + p{margin-top:10px}
+.price{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:24px 0}
+@media(max-width:620px){.price{grid-template-columns:1fr}}
+.opt{border:1px solid var(--rule);border-radius:4px;padding:22px;
+     background:var(--surface);min-width:0}
+.opt .lab{font-family:var(--mono);font-size:11px;letter-spacing:.1em;
+          text-transform:uppercase;color:var(--muted)}
+.opt .fig{font-family:var(--display);font-size:36px;font-weight:600;
+          margin:8px 0 2px;letter-spacing:-.02em}
+.opt .sub{font-size:13.5px;color:var(--muted)}
+.opt ul{margin:14px 0 0;padding-left:18px}
+.opt li{font-size:14px;margin:6px 0;color:var(--muted)}
+ol.steps{counter-reset:s;list-style:none;padding:0;margin:20px 0}
+ol.steps li{counter-increment:s;position:relative;padding-left:42px;
+            margin:16px 0;max-width:64ch}
+ol.steps li::before{content:counter(s);position:absolute;left:0;top:1px;
+  width:26px;height:26px;border-radius:50%;background:var(--meas-bg);
+  color:var(--meas);font-family:var(--mono);font-size:13px;font-weight:600;
+  display:flex;align-items:center;justify-content:center}
+ol.steps b{display:block;color:var(--ink);font-weight:600}
+ol.steps span{color:var(--muted);font-size:15px}
+footer{margin-top:64px;padding-top:24px;border-top:1px solid var(--line);
+       font-size:13px;color:var(--muted)}
+footer p{max-width:70ch;margin:10px 0}
+</style>
+</head>
+<body>
+
+
+<div class="wrap">
+
+<header>
+  <div class="kicker">Strategy licence &middot; measured 9 November 2026</div>
+  <h1>Polymarket Reward Farm</h1>
+  <p class="standfirst">A liquidity-reward harvester for Polymarket's open
+  rewards programme. Selects quiet, uncorrelated, fee-free markets with funded
+  pools, sizes against the 25% score cap, and rotates as competition arrives.</p>
+  <p style="margin-top:22px"><span class="tag t-meas">Teal &mdash; measured on live data</span>
+  <span class="tag t-mod" style="margin-left:8px">Rust &mdash; modelled or bracketed</span></p>
+</header>
+
+<h2>Read this part first</h2>
+
+<div class="callout">
+  <p><strong>No reward has ever been paid to this strategy and no order has
+  ever been filled by it. Capital ever deployed: $0.</strong></p>
+  <p>An earlier draft of this document led with <strong>$17,668/month at
+  $50,000</strong>. That was <em>gross reward</em>, and gross is not income.
+  Netting adverse selection reverses the sign. The figure was wrong, it is
+  corrected below, and the correction is the most important thing here.</p>
+  <p>The archive that ships with this licence already closed reward farming as
+  negative twice, in §5 and §16b. Those sections were right. The capacity work
+  had quietly dropped the cost side.</p>
+</div>
+
+<h2>What it actually earns</h2>
+<p class="lede">Gross reward, minus adverse selection, by capital and market
+filter.</p>
+
+<div class="scroll">
+<table>
+  <caption>Live eligible universe, 70 markets. Cost uses each market's own fee
+  class to pick the applicable markout from the archive. Modelled throughout,
+  and the run-to-run spread on these figures reaches 40%.</caption>
+  <thead><tr><th>Configuration</th><th>Capital</th><th>Markets</th><th>Gross/mo</th>
+  <th>Cost/mo</th><th>Net/mo</th></tr></thead>
+  <tbody>
+    <tr><td>fee-free only</td><td>$3,000</td><td>6</td><td>7,328</td><td>4,957</td><td class="hi">+2,371</td></tr>
+    <tr><td>fee-free only</td><td>$5,000</td><td>7</td><td>8,798</td><td>5,810</td><td class="hi">+2,988</td></tr>
+    <tr><td>fee-free only</td><td>$10,000</td><td>8</td><td>9,900</td><td>6,450</td><td class="hi">+3,450</td></tr>
+    <tr><td><b>fee-free only</b></td><td><b>$20,000</b></td><td>9</td><td>10,605</td><td>6,655</td><td class="hi">+3,950</td></tr>
+    <tr><td>fee-free only</td><td>$30,000</td><td>11</td><td>11,018</td><td>8,761</td><td class="hi">+2,256</td></tr>
+    <tr><td>fee-free only</td><td>$40,000</td><td>11</td><td>11,292</td><td>13,535</td><td class="lo">&minus;2,243</td></tr>
+    <tr><td class="dim">all markets</td><td class="dim">$50,000</td><td class="dim">25</td><td class="dim">21,682</td><td class="dim">39,345</td><td class="lo">&minus;17,663</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p><span class="tag t-mod">Modelled</span> &nbsp;Two hard constraints follow,
+and they define the product:</p>
+
+<div class="split">
+  <div class="panel">
+    <h4>Fee-free markets only</h4>
+    <ul>
+      <li>Unfiltered, <b>72%</b> of a $50k book lands in fee-enabled markets</li>
+      <li>Archive markout there is <b>&minus;0.0183/share</b>, CI excludes zero</li>
+      <li>Only <b>18 of 70</b> eligible markets are fee-free</li>
+    </ul>
+  </div>
+  <div class="panel">
+    <h4>It runs from $3,000 to $30,000</h4>
+    <ul>
+      <li>Net <b>peaks at $20k</b>, negative by $40k</li>
+      <li>Cheapest qualifying position is <b>$44</b>, median $178 &mdash; the
+      floor is set by needing 6&ndash;8 markets to diversify, not by the ticket</li>
+      <li>Cost grows faster than reward as the book grows. This does <b>not</b>
+      absorb $250,000, and anyone modelling it linear is wrong</li>
+    </ul>
+  </div>
+</div>
+
+<p><strong>The table starts at $3,000 deliberately.</strong> The model stays
+positive below that &mdash; it returns 246%/month at $500 and 440% at $370
+&mdash; and those figures are not shown because they are almost certainly
+wrong. At that size the book sits in three or four tiny pools and pins against
+the 25% score cap, which is the exact shape the research archive flags: <em>an
+implausibly good number is your bug, eight times out of eight.</em> Anyone
+quoting you a triple-digit monthly return on a few hundred dollars is quoting
+an artefact.</p>
+
+<h2>The parameter that decides the sign</h2>
+<p class="lede">And it is not established.</p>
+
+<div class="scroll">
+<table>
+  <caption>Net income at $20,000, fee-free, across the measured markout range.
+  Break-even sits near &minus;0.0028/share.</caption>
+  <thead><tr><th>Markout/share</th><th>Source</th><th>Net/month</th></tr></thead>
+  <tbody>
+    <tr><td>0.0000</td><td style="text-align:left">§16b CI optimistic edge</td><td class="hi">+10,605</td></tr>
+    <tr><td>0.0011</td><td style="text-align:left">§16b point estimate, n=59</td><td class="hi">+6,490</td></tr>
+    <tr><td>0.0026</td><td style="text-align:left">midway to CI floor</td><td>+878</td></tr>
+    <tr><td>0.0049</td><td style="text-align:left">§16b CI pessimistic edge</td><td class="lo">&minus;7,727</td></tr>
+    <tr><td>0.0183</td><td style="text-align:left">§16c rebate-eligible, n=173</td><td class="lo">&minus;57,860</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p><strong>§16b's own confidence interval contains break-even and extends past
+it.</strong> The evidence does not establish that this makes money. It
+establishes that the point estimate is positive and the error bar is not. A
+buyer who needs certainty before deploying should not buy this; a buyer who can
+run a one-week test to settle it should keep reading.</p>
+
+<h2>A 115&times; disagreement, and why it is cheap to settle</h2>
+
+<p>Two defensible ways to estimate how much volume trades against a resting
+book differ by two orders of magnitude:</p>
+
+<div class="scroll">
+<table>
+  <caption>The gap is queue position &mdash; the mechanism the archive names
+  behind all of its negative results, and the one thing a book snapshot can
+  never show.</caption>
+  <thead><tr><th>Cost model</th><th>Basis</th><th>Cost/mo at $20k</th><th>Predicts</th></tr></thead>
+  <tbody>
+    <tr><td>pro-rata</td><td style="text-align:left">volume &times; share of resting depth</td><td>$4,143</td><td>~1,048 fills/day</td></tr>
+    <tr><td>observed</td><td style="text-align:left">§16b's measured 0.2% fill rate</td><td>$36</td><td>~2.2 fills/day</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p><span class="tag t-meas">Measured</span> &nbsp;Net at $20,000 is
+<strong>+$6,462 to +$10,569/month</strong> across that whole range, so the sign
+survives at that size. At $50,000 the range is &minus;$3,742 to +$11,472 and it
+does not.</p>
+
+<p><strong>Fill count is observable on day one.</strong> The two models predict
+1,048/day and 2.2/day. One week of live orders tells the operator which regime
+they are in, before meaningful capital is committed. That is the whole
+acceptance test.</p>
+
+<h2>Are you the whole book?</h2>
+
+<p>The archive's own killer line: <em>"an empty book also means every trade
+that happens, happens against us."</em> The 25% cap is on reward <em>score</em>,
+which says nothing about depth. So depth was measured directly at a $50k book
+across 24 markets, stakes 5&times; to 102&times; the market minimum.</p>
+
+<p><span class="tag t-meas">Measured</span> &nbsp;<strong>5&ndash;8% of resting
+depth inside the reward band, weighted; 21% in the thinnest market held.</strong>
+Because the strategy rests at the best reachable price, where score-per-share is
+highest, it reaches the score cap while holding a far smaller fraction of actual
+size. The empty-book failure mode does not apply at this scale. It is the one
+objection in the archive that this work clears outright.</p>
+
+<h2>The engineering</h2>
+<p class="lede">Three diversification designs were built. How the first two
+failed produced the third.</p>
+
+<div class="split">
+  <div class="panel">
+    <span class="tag t-meas">Replaced</span>
+    <h4>Keyword themes</h4>
+    <ul>
+      <li>20 substrings; everything else falls to <b>"other"</b></li>
+      <li><b>47 of 65</b> markets in that bucket, then capped at two</li>
+      <li>Held <b>Fed rate hike</b> and <b>Fed no change</b> as independent bets</li>
+    </ul>
+  </div>
+  <div class="panel">
+    <span class="tag t-meas">Replaced</span>
+    <h4>Correlation clusters</h4>
+    <ul>
+      <li>Chaining joined <b>LoL Worlds</b> to <b>Musk tweet count</b> at a true
+      &rho; of <b>&minus;0.017</b></li>
+      <li>Zero overlapping hours &rarr; &rho; undefined, so the Fed pair still escaped</li>
+    </ul>
+  </div>
+</div>
+
+<p>The shipped guard is pairwise with no transitive merging: same exchange
+event/negRisk (46 pairs), direct |&rho;| &ge; 0.30 (23), shared rare words (12).
+<span class="tag t-meas">Measured</span> It holds <strong>zero related
+pairs</strong> where the guard it replaces held one, and allocates roughly
+<strong>twice</strong> the capital. Strictly safer and larger.</p>
+
+<p>The exchange's scoring rule is now implemented correctly, too &mdash;
+<code>Q_min = max(min(Q₁,Q₂), max(Q₁,Q₂)/3)</code> rather than plain
+<code>min()</code>. That correction costs 2&ndash;3% of modelled income. The
+competitor score still cannot be computed exactly, because scoring is per maker
+and the public book has no maker identity; provable bounds only.</p>
+
+<h2>It is the rotation, not the position</h2>
+
+<div class="scroll">
+<table>
+  <caption>Competition against pool age, n=70. corr(log age, log competing
+  score) = +0.463.</caption>
+  <thead><tr><th>Pool age</th><th>Markets</th><th>Median competing score</th><th>Competition per $ of pool</th></tr></thead>
+  <tbody>
+    <tr><td>0&ndash;7 days</td><td>59</td><td>16,917</td><td class="hi">142</td></tr>
+    <tr><td>8&ndash;30 days</td><td>2</td><td>20,524</td><td>294</td></tr>
+    <tr><td>&gt;90 days</td><td>7</td><td>173,293</td><td class="lo">2,476</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p><span class="tag t-meas">Measured</span> &nbsp;A pool older than 90 days
+carries <strong>17&times; the competition per dollar</strong>. Supply is not the
+constraint &mdash; platform-wide, <strong>93% of $40,715/day sits in pools
+&le;7 days old</strong>, replenished at 528 markets and $23,090 per day. The
+consequence is operational: <strong>a bot that stops for a week does not hold
+its yield.</strong> Uptime is a product requirement.</p>
+
+<h2>The acceptance test</h2>
+<p class="lede">Redesigned around the cost side, because that is what decides
+the sign.</p>
+
+<ol class="steps">
+  <li><b>Week 1 &mdash; count fills</b><span>Buyer runs the selector fee-free at
+  ~$20,000. Fill count alone separates the two cost regimes: ~1,048/day versus
+  ~2.2/day. No ambiguity.</span></li>
+  <li><b>Weeks 1&ndash;2 &mdash; measure markout</b><span>30-second markout on
+  every fill, against the break-even of &minus;0.0028/share. The harness ships
+  with the licence.</span></li>
+  <li><b>Also verify reward share</b><span><code>/rewards/user/percentages</code>
+  gives the exchange's own reported share per market. Median absolute error
+  versus predicted share &le; 25% over &ge; 10 market-days.</span></li>
+  <li><b>Settle</b><span>Month one is refunded if measured net over 30 days is
+  below zero &mdash; provided the shipped configuration was run: fee-free
+  filter on, capital between $5k and $30k, uptime above 90%. The test runs
+  alongside live operation, not instead of it: capital is deployed and earning
+  from day one.</span></li>
+</ol>
+
+<h2>Price</h2>
+
+<div class="price">
+  <div class="opt">
+    <div class="lab">Monthly licence &mdash; recommended</div>
+    <div class="fig">&euro;599</div>
+    <div class="sub">per month, cancel any time. First operator pays
+    &euro;299 for month one.</div>
+    <ul>
+      <li><b>Month one is refunded</b> if measured net over 30 days is below
+      zero, on the shipped configuration</li>
+      <li>12&ndash;19% of modelled net at $20k capital</li>
+      <li>Universe scanner and guard updates included</li>
+      <li><b>Capped at 5 concurrent operators</b>, written into the licence</li>
+    </ul>
+  </div>
+  <div class="opt">
+    <div class="lab">Outright, exclusive</div>
+    <div class="fig">&euro;4,000</div>
+    <div class="sub">on signature, then <strong>&euro;8,000</strong> on the
+    acceptance test</div>
+    <ul>
+      <li>Full source, sold once</li>
+      <li>The complete research archive</li>
+      <li>Balance payable only on a passed test</li>
+    </ul>
+  </div>
+</div>
+
+<p><strong>Priced off the corrected number, not the gross one.</strong> At
+$20,000 of capital the modelled net is $3,500&ndash;6,500/month, and the sign
+is not certain. &euro;4,000 up front is roughly what rebuilding the tooling and
+the archive costs, which holds whether or not the farm nets positive. Everything
+above that is contingent on the buyer's own measurement.</p>
+
+<div class="scroll">
+<table>
+  <caption>Subscription terms. Month one stands alone: there is no commitment
+  until the acceptance test has passed, because until then neither side knows
+  whether the software works.</caption>
+  <thead><tr><th>Term</th><th>Detail</th></tr></thead>
+  <tbody>
+    <tr><td>Month one</td><td style="text-align:left">&euro;599, or &euro;299 for the first operator. Refunded if measured net over 30 days is below zero</td></tr>
+    <tr><td>After a passed test</td><td style="text-align:left">3 further months at &euro;599</td></tr>
+    <tr><td>Thereafter</td><td style="text-align:left">Monthly, 30 days' notice to cancel</td></tr>
+    <tr><td>Delivery</td><td style="text-align:left">Readable source, private repository. Runs on macOS, Windows or Linux</td></tr>
+    <tr><td>Refund evidence</td><td style="text-align:left">Your Polymarket export for the period: rewards received and fill history</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p><strong>The licensor is in a restricted jurisdiction and cannot run this
+themselves.</strong> That is why it has never been deployed with real capital,
+and it is why it is for sale. It also means the licensor cannot operate your
+account, direct it, or share in its proceeds &mdash; the terms prohibit trading
+directed or controlled by a restricted person. You buy software and research
+and run it yourself. If anyone ever proposes an arrangement where the seller
+steers or shares in your trading, refuse it: that puts your wallet at risk, not
+theirs. The licence states the specific jurisdiction in writing.</p>
+
+<p><strong>Capped at five operators, and the cap is the point.</strong> Reward
+share is <code>your_Q / (comp_Q + your_Q)</code>, so every additional operator
+raises everyone else's denominator. Modelled net per operator at $20,000 each,
+all running the same fee-free filter:</p>
+
+<div class="scroll">
+<table>
+  <caption>The fee-free bench is $2,302/day. A quarter of it is $17,250/month,
+  which is the ceiling for all operators combined &mdash; reached at five.</caption>
+  <thead><tr><th>Operators</th><th>Net per operator</th><th>Net, all combined</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td class="hi">$5,608</td><td>$5,608</td></tr>
+    <tr><td>3</td><td class="hi">$3,706</td><td>$11,117</td></tr>
+    <tr><td>5</td><td class="hi">$3,503</td><td>$17,513</td></tr>
+    <tr><td>8</td><td class="lo">$2,016</td><td>$16,131</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p>At eight the combined total <em>falls</em>: the same money spread thinner,
+with every operator worse off. So the licence is contractually limited to
+<strong>five concurrent operators</strong>. This is sold as a capped
+non-exclusive licence, never as an exclusive one &mdash; your return depends on
+how many others hold it, and that number is stated rather than hidden.</p>
+
+<h2>What ships</h2>
+<div class="split">
+  <div class="panel">
+    <h4>The strategy</h4>
+    <ul>
+      <li><b>Universe scanner</b> &mdash; funded pools, time-to-resolution,
+      quiet-book and fee-class filters</li>
+      <li><b>Relatedness guard</b> &mdash; the three-signal admission rule</li>
+      <li><b>Capacity and net model</b> &mdash; gross, cost and the bracket</li>
+      <li><b>Rotation logic</b> &mdash; exit as competing score climbs</li>
+      <li><b>Markout harness</b> &mdash; the acceptance test itself</li>
+    </ul>
+  </div>
+  <div class="panel">
+    <h4>The archive, and the register</h4>
+    <ul>
+      <li><b>37 hypotheses</b> tested on this venue, 36 closed negative</li>
+      <li><b>8 measurement bugs</b> documented with the wrong numbers they produced</li>
+      <li><b>A limitations register</b> listing all five things that cannot be
+      resolved from public data, including queue position and
+      <code>holdingRewardsEnabled</code></li>
+      <li>Arguably the more valuable half &mdash; a map of where the money is not</li>
+    </ul>
+  </div>
+</div>
+
+<footer>
+  <p><strong>This is a software licence.</strong> Not investment advice, not a
+  managed account, not a solicitation to invest. The seller does not operate the
+  strategy, does not direct its operation, and takes no share of trading
+  proceeds. Past measurement is not a forecast, and every forward figure here is
+  modelled from a strategy that has never traded.</p>
+  <p><strong>Jurisdiction is the buyer's to confirm.</strong> Polymarket
+  restricts a long list of territories, including the United States, United
+  Kingdom, Singapore, Australia, Brazil, Argentina, France, Germany, Italy,
+  Poland and four Canadian provinces. Check the current geoblock list and your
+  own local law before acquiring.</p>
+  <p>Figures measured 9 November 2026 against the live Polymarket universe.
+  Pools, competition and the eligible set move daily; the eligible universe
+  turned over between runs taken twenty minutes apart.</p>
+</footer>
+
+</div>
+
+</body>
+</html>
