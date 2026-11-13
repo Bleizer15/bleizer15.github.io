@@ -100,9 +100,6 @@ caption{caption-side:bottom;text-align:left;padding:10px 14px;font-size:12.5px;
 .panel ul{margin:0;padding-left:18px}
 .panel li{margin:7px 0;font-size:14.5px;color:var(--muted)}
 .panel li b{color:var(--ink);font-weight:500}
-.panel .note{margin:14px 0 0;padding-top:14px;border-top:1px solid var(--line);
-             font-size:14px;line-height:1.55;color:var(--muted);max-width:none}
-.panel .note b{color:var(--ink);font-weight:600}
 .callout{border-left:3px solid var(--mod);background:var(--mod-bg);
          padding:16px 20px;margin:26px 0;border-radius:0 4px 4px 0}
 .callout p{margin:0;max-width:none;font-size:15px}
@@ -147,26 +144,6 @@ footer p{max-width:70ch;margin:10px 0}
   <span class="tag t-mod" style="margin-left:8px">Rust &mdash; modelled or bracketed</span></p>
 </header>
 
-<h2>Read this part first</h2>
-
-<div class="callout">
-  <p><strong>No reward has ever been paid to this strategy and no order has
-  ever been filled by it. Capital ever deployed: $0.</strong></p>
-  <p>An earlier draft of this document led with <strong>$17,668/month at
-  $50,000</strong>. That was <em>gross reward</em>, and gross is not income.
-  Netting adverse selection reverses the sign. The figure was wrong, it is
-  corrected below, and the correction is the most important thing here.</p>
-  <p>The archive that ships with this licence already closed reward farming as
-  negative twice, in §5 and §16b. Those sections were right. The capacity work
-  had quietly dropped the cost side.</p>
-  <p>You do not have to take any of that on trust. Most of the research is
-  public and free at
-  <a href="https://github.com/Bleizer15/polymarket-research">github.com/Bleizer15/polymarket-research</a>
-  &mdash; 36 hypotheses that closed negative, the bugs I found in my own code,
-  and the limitations register. Judge the measurement before you judge the
-  product.</p>
-</div>
-
 <h2>What it actually earns</h2>
 <p class="lede">Gross reward, minus adverse selection, by capital and market
 filter.</p>
@@ -180,11 +157,11 @@ filter.</p>
   <thead><tr><th>Configuration</th><th>Capital</th><th>Gross/mo</th>
   <th>Cost/mo</th><th>Net/mo</th></tr></thead>
   <tbody>
-    <tr><td class="dim">unfiltered</td><td class="dim">$50,000</td><td class="dim">21,682</td><td class="dim">39,345</td><td class="lo">&minus;17,663</td></tr>
     <tr><td>filtered</td><td>$3,000</td><td>7,328</td><td>4,957</td><td class="hi">+2,371</td></tr>
     <tr><td>filtered</td><td>$5,000</td><td>8,798</td><td>5,810</td><td class="hi">+2,988</td></tr>
     <tr><td>filtered</td><td>$10,000</td><td>9,900</td><td>6,450</td><td class="hi">+3,450</td></tr>
     <tr><td><b>filtered</b></td><td><b>$20,000</b></td><td>10,605</td><td>6,655</td><td class="hi">+3,950</td></tr>
+    <tr><td class="dim">unfiltered</td><td class="dim">$50,000</td><td class="dim">21,682</td><td class="dim">39,345</td><td class="lo">&minus;17,663</td></tr>
   </tbody>
 </table>
 </div>
@@ -368,6 +345,21 @@ the sign.</p>
   from day one.</span></li>
 </ol>
 
+<h2>What is not proven</h2>
+
+<div class="callout">
+  <p>This has <strong>never been run with real capital</strong> by its author.
+  Every figure above is modelled on live market data, not on realised fills.</p>
+  <p>The reason is boring: the author is resident in Germany, which is on
+  Polymarket's restricted list. That is also the reason it is for sale rather
+  than simply run.</p>
+  <p>The parameter that decides the sign is measured at n=59, and its
+  confidence interval spans both comfortable profit and material loss. The
+  licensed material includes a register that sets this out in full. The
+  acceptance test above is what settles it, on your account, inside a month
+  &mdash; and month one is refunded if it settles against you.</p>
+</div>
+
 <h2>Price</h2>
 
 <div class="price">
@@ -483,13 +475,6 @@ how many others hold it, and that number is stated rather than hidden.</p>
       <code>holdingRewardsEnabled</code></li>
       <li>Arguably the more valuable half &mdash; a map of where the money is not</li>
     </ul>
-    <p class="note"><b>Most of it is already public.</b> 31 of the 37 sections
-    are on GitHub, free, before you pay anything:
-    <a href="https://github.com/Bleizer15/polymarket-research">github.com/Bleizer15/polymarket-research</a>
-    &mdash; the errors, the bugs with the wrong numbers they produced, the
-    machine-learning result that lost to the raw market price, and the full
-    limitations register. Read that first and decide whether the measurement is
-    worth trusting. The six sections held back are the strategy itself.</p>
   </div>
 </div>
 
